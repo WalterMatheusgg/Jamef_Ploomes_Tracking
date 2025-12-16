@@ -37,7 +37,7 @@ JAMEF_TOKEN_TTL_SECONDS = int(os.getenv("JAMEF_TOKEN_TTL_SECONDS", "3600"))  # 1
 
 # ------------------------ TESTE ------------------------
 # Pipeline de TESTE: "[Cópia] - Gestão de Entregas"
-PIPELINE_ID = 90001455
+PIPELINE_ID = 90000000
 
 # IDs dos Stages a considerar (exclui "Entrega Concluída")
 STAGE_IDS = [
@@ -45,13 +45,13 @@ STAGE_IDS = [
 
 ]
 # # ---------------------- PRODUÇÃO ---------------------
-# PIPELINE_ID = 90000284
+# PIPELINE_ID = 90000000
 #
 # STAGE_IDS = [
-#     90001673,
-#     90001674,
-#     90001675,
-#     90002319,
+#     90000000,
+#     90000000,
+#     90000000,
+#     90000000,
 # ]
 #
 # STAGE_NAMES = [
