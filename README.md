@@ -1,175 +1,84 @@
-# 🚚 Integração Jamef → Ploomes (Gestão de Entregas)
+<div align="center">
 
-Sincroniza automaticamente o **rastreamento de entregas da Jamef** com negócios no **Ploomes**, preenchendo:
+# 🚚 Jamef → Ploomes Tracking
+### Automação de rastreamento e integração de APIs
 
-- Descrição detalhada do status da entrega  
-- Previsão de entrega (vinda da Jamef ou calculada)  
-- Data de entrega realizada  
-- Transportadora origem  
-- Número da nota fiscal  
-- Status da entrega em formato curto/limpo
+**Consulta eventos de entrega na Jamef e prepara atualizações de negócios no Ploomes.**
 
-> **Stack:**   3.13 · requests · API Jamef · API Ploomes
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white) ![REST](https://img.shields.io/badge/REST-APIs-0F766E?style=for-the-badge) ![CSV](https://img.shields.io/badge/CSV-Auditoria-334155?style=for-the-badge)
 
----
+</div>
 
-## 📁 Estrutura do Projeto
+## 🎯 Visão geral
 
-Exemplo de estrutura do repositório:
+Integração em Python que consulta rastreamentos logísticos, normaliza status e datas e atualiza propriedades de negócios no CRM Ploomes. É um exemplo de **automação empresarial, comunicação entre APIs e rastreabilidade**.
+
+## ✨ Recursos
+
+| Recurso | Objetivo |
+|---|---|
+| 🔐 API Jamef | Autenticação e consulta de rastreamento |
+| 📋 Ploomes | Consulta de negócios por pipeline e etapa |
+| 📦 Eventos | Conversão de eventos em descrição e status |
+| 📅 Previsões | Extração e cálculo de datas |
+| 🧪 DRY_RUN | Simulação sem gravar atualizações |
+| 📊 Logs e CSV | Acompanhamento e auditoria |
+
+```mermaid
+flowchart TD
+A[Negócios Ploomes] --> B[Filtrar etapas]
+B --> C[Consultar rastreamento Jamef]
+C --> D[Normalizar status e datas]
+D --> E{DRY_RUN?}
+E -->|Sim| F[Logs e CSV]
+E -->|Não| G[Atualizar Ploomes]
+G --> F
+```
+
+## 📁 Estrutura
 
 ```text
-.
-├─ main_jamef.py           # Entry point (pipeline Jamef → Ploomes)
-├─ config.py               # Configurações e credenciais (env + defaults)
-├─ logging_config.py       # Setup de logging (arquivo + console)
-├─ text_cleaner.py         # Funções de limpeza de status de rastreio
-├─ jamef/
-│   └─ client.py           # Cliente da API Jamef (login + rastreamento)
-├─ ploomes/
-│   └─ client.py           # Cliente da API Ploomes (deals + otherproperties)
-├─ utils/
-│   ├─ helpers.py          # Datas, prazos, regras de negócio
-│   └─ http_retry.py       # Wrapper de requests com retry/backoff
-└─ requirements.txt        # Dependências do projeto
+main_jamef.py       # Orquestração
+config.py           # Configuração e campos
+jamef/              # Cliente da API Jamef
+ploomes/            # Cliente da API Ploomes
+utils/              # Helpers e tentativas HTTP
+logging_config.py   # Logs
+text_cleaner.py     # Tratamento de status
+requirements.txt    # Dependências
+```
 
-🔧 Pré-requisitos
-  3.13 instalado
+## 🚀 Instalação e teste seguro
 
-Acesso à API da Jamef (usuário e senha)
-Chave de API do Ploomes (User-Key)
-Acesso à internet no servidor/PC que rodará o script
-
-🐍 Configuração do Ambiente (venv com   3.13)
-1. Clonar o repositório
-bash
-git clone https://github.com/SEU-USUARIO/SEU-REPO.git
-cd SEU-REPO
-Substitua SEU-USUARIO/SEU-REPO pelo caminho real do seu repositório.
-
-2. Criar o ambiente virtual
-Windows (PowerShell)
-powershell
-
-py -3.13 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-Windows (CMD)
-cmd
-
-py -3.13 -m venv .venv
-.\.venv\Scripts\activate.bat
-Linux / WSL / macOS
-bash
-
-3.13 -m venv .venv
+```bash
+git clone https://github.com/WalterMatheusgg/Jamef_Ploomes_Tracking.git
+cd Jamef_Ploomes_Tracking
+python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
 
-3. Instalar dependências
-Com o venv ativo:
+Configure suas credenciais e o modo de simulação **explicitamente**:
 
-bash
-pip install -r requirements.txt
-# ou, se não tiver requirements.txt:
-# pip install requests
-⚙️ Configuração (variáveis de ambiente)
-Grande parte das configurações vem de config.py, mas podem (e devem) ser sobrescritas via variáveis de ambiente.
+```bash
+export JAMEF_USERNAME="seu_usuario"
+export JAMEF_PASSWORD="sua_senha"
+export PLOOMES_KEY="sua_chave"
+export DRY_RUN="true"
+python main_jamef.py
+```
 
-Jamef
+Antes de executar, ajuste em `config.py` os valores `PIPELINE_ID`, `STAGE_IDS`, `TAX_ID_REGISTRATION` e `*_FIELD_KEY` para seu ambiente autorizado. O repositório contém marcadores e a lista de etapas está vazia.
 
-bash
+**Atenção:** no código atual, se `DRY_RUN` não for definido, o padrão é `false`, que permite gravação. Não execute com credenciais de produção sem validar os filtros e os resultados simulados.
 
-# Linux / macOS
-export JAMEF_USERNAME="seu.usuario@empresa.com"
-export JAMEF_PASSWORD="sua_senha_super_secreta"
-export JAMEF_AUTH_BASE_URL="https://api.jamef.com.br/auth/v1"
-export JAMEF_TRACKING_BASE_URL="https://api.jamef.com.br/consulta/v1"
+## 🔒 Cuidados e limites
 
-# Windows PowerShell
-$env:JAMEF_USERNAME = "seu.usuario@empresa.com"
-$env:JAMEF_PASSWORD = "sua_senha_super_secreta"
-$env:JAMEF_AUTH_BASE_URL = "https://api.jamef.com.br/auth/v1"
-$env:JAMEF_TRACKING_BASE_URL = "https://api.jamef.com.br/consulta/v1"
-A consulta de rastreamento usa TAX_ID_REGISTRATION (CNPJ do remetente) como documentoRemetente e o número da NF como numeroNotaFiscal.
+- Não publique chaves de API, dados de clientes nem arquivos de auditoria com informações reais.
+- Ajuste a lista de feriados de referência em `config.py`, atualmente referente a 2025.
+- Respeite limites das APIs e valide o tratamento de erros.
+- A existência do código não significa homologação ponta a ponta.
 
-Ploomes
+## 👨‍💻 Autor
 
-bash
-# Linux / macOS
-export PLOOMES_KEY="SUA_USER_KEY_DO_PLOOMES"
-
-# Windows PowerShell
-$env:PLOOMES_KEY = "SUA_USER_KEY_DO_PLOOMES"
-Os FieldKey dos campos do Ploomes (status, previsão, transportadora, NF etc.) são configurados em config.py:
-
-STATUS_DESCRIPTION_FIELD_KEY
-ESTIMATED_DELIVERY_DATE_FIELD_KEY
-DELIVERY_DATE_UPDATED_FIELD_KEY
-DELIVERY_STATUS_FIELD_KEY
-ORDER_ID_FIELD_KEY
-TRANSPORTER_FIELD_KEY
-TRANSPORTER_VALUE_JAMEF
-
-Pipeline e Estágios
-Em config.py:
-
-PIPELINE_ID = 90001455  # Exemplo
-STAGE_IDS = [
-    90010242,  # Faturado para Entrega
-    90010243,  # Em deslocamento
-    90010244,  # Atraso
-    90010245,  # Pendência
-]
-
-🧪 DRY_RUN (modo teste)
-O comportamento é controlado por DRY_RUN em config.py:
-
-DRY_RUN = os.getenv("DRY_RUN", "false").strip().lower() in ("1", "true", "yes", "y", "sim")
-Definição via ambiente:
-
-bash
-
-# Linux / macOS
-export DRY_RUN="true"   # modo teste (não grava no Ploomes)
-# ou
-export DRY_RUN="false"  # modo produção (atualiza Ploomes)
-
-# Windows PowerShell
-$env:DRY_RUN = "true"
-Quando DRY_RUN=true, o script apenas loga o que faria, sem alterar negócios no Ploomes.
-
-🚀 Execução
-Com o venv ativo e as variáveis configuradas:
-
-bash
-  main_jamef.py
-
-O fluxo é:
-Faz login na API da Jamef.
-Busca negócios no Ploomes (pipeline + estágios configurados).
-Para cada negócio:
-Confere se a transportadora é JAMEF.
-Lê a NF do negócio.
-Consulta rastreamento na Jamef (documentoRemetente + numeroNotaFiscal).
-
-Extrai:
-Descrição rica: ex. INICIADO | ENTREGA REALIZADA | 11-12-2025
-Previsão de entrega: da Jamef ou calculada (em ISO para DateTimeField)
-Data de entrega real, se evento de entrega for identificado
-Status limpo/curto, via limpar_status_rastreamento(...).
-Atualiza campos no Ploomes (se não estiver em DRY_RUN).
-Registra tudo em um CSV de auditoria.
-
-Ao final, algo como:
-text
-
-Concluído. Negócios percorridos: 42 | CSV: .../audit_jamef_2025-12-12_11-19-03.csv
-
-📊 Logs e Auditoria
-Logs são gravados em LOG_FILE_JAMEF (definido em config.py) e também enviados para o console.
-
-Cada execução gera um CSV em AUDIT_DIR_JAMEF, com colunas como:
-
-deal id, stage id, title, transportadora
-
-previsao calculada, entrega real
-
-status execucao, Nota Fiscal, Status da Entrega
+**Walter Matheus Soares da Silva** · [GitHub](https://github.com/WalterMatheusgg)
