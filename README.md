@@ -51,8 +51,8 @@ requirements.txt    # Dependências
 ## 🚀 Instalação e teste seguro
 
 ```bash
-git clone https://github.com/WalterMatheusgg/Jamef_Ploomes_Tracking.git
-cd Jamef_Ploomes_Tracking
+git clone https://github.com/WalterMatheusgg/ponte-logistica-jamef-ploomes.git
+cd ponte-logistica-jamef-ploomes
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
